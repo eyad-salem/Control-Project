@@ -80,20 +80,20 @@ Also we got "Velocity profiler" which is used to know the speed limit in corners
 
     MPC--> 
 
-        ![alt text](assets/mpc.png)
+        ![alt text](mpc.png)
 
 
     lateral_pid-->
 
-        ![alt text](assets/lateral_pid.png)
+        ![alt text](lateral_pid.png)
 
     
     pure_pursuit-->
 
-        ![alt text](assets/pure_pursuit.png)
+        ![alt text](pure_pursuit.png)
 
      manual_control-->
 
-        ![alt text](assets/manual_control.png)
+        ![alt text](manual_control.png)
 
 
