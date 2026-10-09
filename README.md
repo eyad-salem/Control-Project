@@ -58,7 +58,7 @@ Also we got "Velocity profiler" which is used to know the speed limit in corners
 
     -- BenchMarks & Comparison -- 
 
-    ![alt text](image-9.png)
+    ![alt text](table.png)
 
     To begin with the aim is a fair speed with low CTE - Cross Track Error to make sure that the vehicles respect the lane it's driving through and doesn't keep getting out of bounds.
     As shown the MPC has the best lap time along with the highest speed by a fairly good difference , but comparing the CTEs it would hold the second place after the pure pursuit. After these two , the PID shows up it's not too bad but it's not too quick or even maintaining the track boundaries correctly so it won't really be the perfect option here. Finally , the manual control it shouldn't even be on the list as it's results are way too off from the optimal results needed therefore it's not reliable by any means.
@@ -80,17 +80,21 @@ Also we got "Velocity profiler" which is used to know the speed limit in corners
 
     MPC--> 
 
-        ![alt text](image.png)
+        ![alt text](mpc.png)
 
 
     lateral_pid-->
 
-        ![alt text](image-1.png)
+        ![alt text](lateral_pid.png)
 
     
     pure_pursuit-->
 
-        ![alt text](image-2.png)
+        ![alt text](pure_pursuit.png)
+
+     manual_control-->
+
+        ![alt text](manua;_control.png)
 
 
     Manual_control-->
