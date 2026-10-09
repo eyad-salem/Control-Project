@@ -45,6 +45,89 @@ class KinematicBicycleMPC:
         current_steer: actual current steering angle in radians
         Returns: (steer_rad, throttle_cmd in [-1.0, 1.0])
         """
+        N = min(self.N ,len(ref_trajectory))
+        if N<2:
+            return(0.0,0.0)
+        
+        bounds = []
+        for i in range(N):
+            bounds.append((-self.max_steer_rad , self.max_steer_rad))
+            bounds.append((-self.k_a , self.k_a))
+
+        # we normalize angle to make sure any angle falls within the range [-pi , pi]
+        def normalize_angle(angle):
+            return math.atan2(math.sin(angle),math.cos(angle))
+
+        def objective(u):
+            total_cost = 0.0
+            x , y , yaw , v = x0
+            prev_delta = current_steer
+
+            for k in range(N):
+            # getting the inputs 
+                delta_k = u[2*k]
+                a_k = u[2*k+1]
+
+              
+                x = x + v * math.cos(yaw) * self.dt
+                y = y + v * math.sin(yaw) * self.dt
+                yaw = yaw + (v/self.L) * math.tan(delta_k) * self.dt
+                yaw = normalize_angle(yaw)
+                v = max(0.0 , v + a_k * self.dt)
+
+                xr , yr , yawr , vr = ref_trajectory[k]
+
+                dx = x - xr
+                dy = y - yr
+                
+
+                e_y = - dx * math.sin(yawr) + dy * math.cos(yawr)
+                e_x = dx * math.cos(yawr) + dy * math.sin(yawr)
+                e_yaw = normalize_angle(yaw - yawr)
+                e_v = v - vr
+
+
+                steering_rate = delta_k - prev_delta
+                # Calculate the total cost
+                cost = ((self.w_lat * (e_y **2))+ (self.w_long * (e_x **2))+ (self.w_yaw*(e_yaw**2))+
+                (self.w_v*(e_v ** 2))+(self.w_steer * (delta_k **2))+(self.w_dsteer *(steering_rate**2)) + (self.w_accel*(a_k**2)))
+
+                total_cost += cost
+                prev_delta = delta_k
+
+            return total_cost
+        ## just initializing with zeros 
+        u_init = np.zeros(2 * N)
+
+        for k in range (N-1):
+            if 2* (k+1) + 1 < len(self.last_u):
+                u_init[2*k] = self.last_u[2*(k+1)]
+                u_init[2*k +1] = self.last_u [2*(k+1) +1]
+                # this shifts the end of the horizon since the loops ends 1 step behind to prevent index error
+        if 2 * (N-1) + 1 < len(self.last_u):
+            u_init[2*(N-1)] = self.last_u[2*(N-1)]
+            u_init[2*(N-1)+1] = self.last_u [2*(N-1) +1]
+
+        res = minimize(objective, u_init, bounds=bounds, method='SLSQP', options={'maxiter': 25, 'ftol': 1e-3})
+        # .x is something included in the imported library which contains the optimal solution 
+        optimal_sol = res.x
+                
+        for i in range( 2 * N):
+            self.last_u[i] = optimal_sol[i]
+
+        delta_cmd = optimal_sol[0]
+        accel_cmd = optimal_sol[1]
+
+        throttle_cmd = accel_cmd / self.k_a
+        if throttle_cmd > 1 :
+            throttle_cmd = 1.0
+        elif throttle_cmd < -1:
+            throttle_cmd = -1.0
+        
+        return (delta_cmd , throttle_cmd)
+
+
+
         # ======================================================================
         # TODO: Milestone 5.4 — Extended Kinematic Bicycle MPC
         #
@@ -81,4 +164,4 @@ class KinematicBicycleMPC:
         #      throttle_cmd = accel_cmd / self.k_a
         #    - Return tuple: (delta_cmd, throttle_cmd).
         # ======================================================================
-        pass
+        

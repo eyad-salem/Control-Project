@@ -24,7 +24,7 @@ class LapAnalyzer(Node):
         # Subscriptions
         self.path_sub = self.create_subscription(Path, '/path', self.path_callback, 10)
         self.state_sub = self.create_subscription(Odometry, '/state', self.state_callback, 10)
-
+        self.target_sub = self.create_subscription(Point , '/control/target_point',self.target_pt_callback,10)
         # Publishers
         self.metrics_pub = self.create_publisher(String, '/lap/metrics', 10)
         self.viz_pub = self.create_publisher(MarkerArray, '/lap/visualization', 10)
@@ -42,6 +42,7 @@ class LapAnalyzer(Node):
         self.path_cum_dist = []
         self.track_length = 0.0
         self.path_received = False
+        self.target_pt = None
 
         # State & Timing
         self.start_sim_time = None
@@ -77,6 +78,11 @@ class LapAnalyzer(Node):
 
         # Publish periodic summary and HUD at 10 Hz
         self.timer = self.create_timer(0.1, self.publish_telemetry)
+
+    
+    def target_pt_callback(self,msg):
+        self.target_pt = (msg.x ,msg.y)
+
 
     def path_callback(self, msg: Path):
         """Processes received path and precomputes cumulative distance."""
@@ -234,6 +240,26 @@ class LapAnalyzer(Node):
         if self.best_lap_time is None or lap_duration < self.best_lap_time:
             self.best_lap_time = lap_duration
 
+        # make sure array isn't empty
+        if len(self.lap_ctes) > 0:
+            cte = np.array(self.lap_ctes)
+            mean_cte = float(np.mean(cte))
+            max_cte = float(np.max(cte))
+            rms_cte = float(np.sqrt(np.mean(cte ** 2)))
+        else:
+            mean_cte,max_cte,rms_cte = 0.0 , 0.0 , 0.0
+
+        if len(self.lap_speeds) > 0:
+            mean_speed = np.mean(self.lap_speeds)
+            max_speed = np.max(self.lap_speeds)
+        else:
+            mean_speed , max_speed = 0.0 , 0.0
+        
+        self.get_logger().info(f"-------- LAP {self.lap_count} -------- COMPLETE \n Lap Time : {lap_duration:.2f} s || Best Time : {self.best_lap_time:.2f} \n Mean CTE : {mean_cte:.3f} m | RMS CTE : {rms_cte:.3f} m | Max CTE : {max_cte:.3f} m \n Average Speed : {mean_speed:.2f} m/s | Max Speed : {max_speed:.2f} m/s \n Total Distance : {self.total_distance:.2f} m \n")
+        
+        self.lap_ctes.clear()
+        self.lap_heading_errors.clear()
+        self.lap_speeds.clear()
         # ======================================================================
         # TODO: Lap Performance Analysis & Metrics Aggregation
         #
@@ -253,10 +279,47 @@ class LapAnalyzer(Node):
         #    Clear per-lap history buffers (self.lap_ctes, self.lap_heading_errors,
         #    self.lap_speeds) so the next lap starts fresh.
         # ======================================================================
-        pass
+    
 
     def publish_telemetry(self):
         """Periodically publishes numerical telemetry and RViz visual markers at 10 Hz."""
+        cte_msg = Float32()
+        cte_msg.data = float(self.current_cte)
+        self.cte_pub.publish(cte_msg)
+
+        speed_msg = Float32()
+        speed_msg.data = float(self.current_speed)
+        self.speed_pub.publish(speed_msg)
+
+        heading_err_msg = Float32()
+        heading_err_msg.data = float(math.degrees(self.current_heading_err))
+        self.heading_err_pub.publish(heading_err_msg)
+        
+        lap_time_msg = Float32()
+        lap_time_msg.data = float(self.current_lap_time)
+        self.lap_time_pub.publish(lap_time_msg)
+
+        if len(self.global_ctes) > 0:
+            cur_rms_cte = float(np.sqrt(np.mean(np.array(self.global_ctes) ** 2)))
+        else:
+            cur_rms_cte = 0.0
+    
+
+        telemetry = {
+            'lap': self.lap_count,
+            'current_lap_time': self.current_lap_time,
+            'last_lap_time': self.last_lap_time,
+            'best_lap_time': self.best_lap_time,
+            'speed': self.current_speed,
+            'current_cte': self.current_cte,
+            'rms_cte': cur_rms_cte,
+            'heading_err_deg': math.degrees(self.current_heading_err)
+        }
+        json_msg = String()
+        json_msg.data = json.dumps(telemetry)
+        self.metrics_pub.publish(json_msg)
+
+        self.publish_rviz_markers(telemetry)
         # ======================================================================
         # TODO: Telemetry Publishing for Graphing (PlotJuggler / rqt_plot) & Logging
         #
@@ -276,7 +339,7 @@ class LapAnalyzer(Node):
         #    Pass the telemetry dict to self.publish_rviz_markers(telemetry).
         # ======================================================================
         # Baseline start-gate visualization hook
-        self.publish_rviz_markers()
+
 
     def publish_rviz_markers(self, telemetry=None):
         """Renders start gate, error whisker, and on-screen HUD text in RViz."""
@@ -307,7 +370,77 @@ class LapAnalyzer(Node):
             gate.color.b = 0.2
             gate.color.a = 0.7
             ma.markers.append(gate)
+            # make sure that the arrays are not empty so we can work on them
+        if self.last_xy is not None and self.proj_xy != (0.0 , 0.0):
+            m = Marker()
+            m.header.frame_id = 'map'
+            m.header.stamp = now
+            m.ns = 'cte_whisker'
+            m.id = 1
+            m.type = Marker.LINE_STRIP
+            m.action = Marker.ADD
+            m.scale.x = 0.08
 
+            m.color.r = 1.0
+            m.color.g = 0.0
+            m.color.b = 0.0
+            m.color.a = 0.7
+
+            m.points = [Point(x = self.last_xy[0] , y =self.last_xy[1] , z =0.1),
+            Point(x = self.proj_xy[0] , y = self.proj_xy[1] , z =0.1)
+            ]
+            ma.markers.append(m)
+
+        if self.last_xy is not None and telemetry is not None:
+            hud = Marker()
+            hud.header.frame_id = 'map'
+            hud.header.stamp = now
+            hud.ns = 'telemetry_hud'
+            hud.id = 2
+            hud.type = Marker.TEXT_VIEW_FACING
+            hud.action = Marker.ADD
+
+            hud.pose.position.x = self.last_xy[0]
+            hud.pose.position.y = self.last_xy[1]
+            hud.pose.position.z = 1.7
+            hud.scale.z = 0.30
+
+            hud.color.r = 0.8
+            hud.color.g = 1.0
+            hud.color.b = 0.8
+            hud.color.a = 0.4
+
+            best_time = (f"{telemetry['best_lap_time']} s")
+            hud.text = (f"Lap : {telemetry['lap']} \n Time : {telemetry['current_lap_time']:.1f} s \n Best : {best_time} \n Speed : {telemetry['speed']:.2f} m/s \n Cte : {telemetry['current_cte']:.2f} m")
+            ma.markers.append(hud)
+        
+
+        # Implementing the controller lookahead preview 
+        if self.target_pt is not None:
+            t_marker = Marker()
+            t_marker.header.frame_id = 'map'
+            t_marker.header.stamp = now
+            t_marker.ns = 'lookahead_target'
+            t_marker.id = 3 
+            t_marker.type = Marker.SPHERE
+            t_marker.action = Marker.ADD
+            
+            t_marker.pose.position.x = float(self.target_pt[0])
+            t_marker.pose.position.y = float(self.target_pt[1])
+            t_marker.pose.position.z = 0.3
+            
+            t_marker.scale.x = 0.5
+            t_marker.scale.y = 0.5
+            t_marker.scale.z = 0.5
+
+            t_marker.color.r = 1.0
+            t_marker.color.g = 1.0
+            t_marker.color.b = 0.0
+            t_marker.color.a = 0.6
+            ma.markers.append(t_marker)
+
+
+        self.viz_pub.publish(ma)
         # ======================================================================
         # TODO: Custom Real-Time RViz Visualizations & Telemetry HUD
         #
@@ -331,7 +464,7 @@ class LapAnalyzer(Node):
         #  - Lateral Acceleration Gauge: Render a vertical bar showing cornering load.
         # ======================================================================
 
-        self.viz_pub.publish(ma)
+        
 
 
 def main(args=None):

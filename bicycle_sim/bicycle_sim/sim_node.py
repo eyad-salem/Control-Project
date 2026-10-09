@@ -14,7 +14,6 @@ except ImportError:
     Track = None
     DEFAULT_TRACK_FILE = 'centerline_0.csv'
 
-
 def main(args=None):
     rclpy.init(args=args)
 

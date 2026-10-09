@@ -14,8 +14,7 @@ class LateralPIDController:
     and orientation error relative to the nearest path waypoint.
     """
 
-    def __init__(self, kp=0.8, ki=0.02, kd=0.15, k_yaw=0.5, dt=0.1,
-                 max_steer_rad=math.radians(35.0), integral_limit=1.0):
+    def __init__(self, kp=0.8, ki=0.02, kd=0.15, k_yaw=0.5, dt=0.1,max_steer_rad=math.radians(35.0), integral_limit=1.0):
         self.kp = kp
         self.ki = ki
         self.kd = kd
@@ -25,7 +24,7 @@ class LateralPIDController:
         self.integral_limit = integral_limit
 
         self.integral_cte = 0.0
-        self.prev_cte = 0.0
+        self.prev_cte =  None
 
     def compute_steering(self, cte, heading_err):
         """Computes front wheel steering angle delta in radians.
@@ -37,14 +36,36 @@ class LateralPIDController:
         Returns:
             delta_rad: Commanded front steering angle in radians [-max_steer_rad, max_steer_rad].
         """
+        if self.prev_cte is None:
+            d_cte = 0.0
+        else:
+            d_cte = (cte - self.prev_cte)/self.dt
+        self.integral_cte += cte * self.dt
+        self.integral_cte = np.clip(self.integral_cte , -self.integral_limit , self.integral_limit)
+        # will put everything negative since state left = positive 
+        p_cte = -(self.kp * cte)
+        i_cte = -(self.ki * self.integral_cte)
+        d_term_cte = -(self.kd * d_cte) 
+        yaw_cte = -(self.k_yaw * heading_err)
+        
+
+        ster_output  =  p_cte + i_cte + d_term_cte + yaw_cte
+
+        self.prev_cte = cte
+
+        ster_output = float(np.clip (ster_output  , -self.max_steer_rad , self.max_steer_rad))
+
+        return ster_output
+
+
         # TODO: Milestone 5.2 — Reactive Lateral PID Controller
         # This is the lateral steering controller. It corrects for how far the car
         # is off the path (CTE) and how misaligned its heading is.
         # Implement PID on the CTE with anti-windup, add a heading correction term,
         # and clamp the output to the steering limits.
-        pass
+    
 
     def reset(self):
         """Resets integrator and previous error state."""
         self.integral_cte = 0.0
-        self.prev_cte = 0.0
+        self.prev_cte = None

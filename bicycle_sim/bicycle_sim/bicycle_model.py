@@ -129,17 +129,52 @@ class Car(Node):
             self.c_drag: 0.005 (aerodynamic drag coefficient)
             self.c_roll: 0.05 (rolling resistance coefficient)
         """
+        v = float(self.x[3])
+        theta = float(self.x[2])
+        delta = float(self.u[1])
+        throttle = float(self.u[0])
+        a_cmd = throttle * self.k_a
+        a_drag = self.c_drag * (v**2)
+        ## This turns the tire friction on if the car didn't stop otherwise if it stopped then turn it off to prevent negative values in speed 
+        if v>0.02:
+            a_roll = self.c_roll 
+        else :
+            a_roll = 0
+
+            ## rate of change x, y  , delta & velocity
+        v_dot = a_cmd - a_drag - a_roll
+        x_dot_pos = v * math.cos(theta)
+        y_dot_pos = v * math.sin(theta)
+        theta_dot = (v / self.wheelbase_length) * math.tan(delta)
+
+        ## since we imported numpy we can use it's array to store these values
+        self.x_dot = np.array ([x_dot_pos, y_dot_pos,theta_dot,v_dot])
+
+
         # TODO: Milestone 2.2 — Extended Kinematic Bicycle Equations of Motion
         # This simulates the physics of the car moving and turning in the real world.
         # Implement the continuous-time state derivatives based on throttle and steering.
-        pass
+        
 
     def update_x(self):
+        ## we were able to multiply instantly an array with a constant cuz we used numpy array here
+        
+        self.x += self.x_dot * self.dt
+        ## take care of constraint like max speed if under 0 then force it to be 0 , but if over max speed them cap it at max speed
+        self.x[3] = max(0.0 , min(self.x[3] , self.max_speed))
+        if self.x[3] <= 0.0:
+            self.x[3] = 0.0
+        
+        elif self.x[3] > self.max_speed:
+            self.x[3] = self.max_speed
+    
+
+
         """Integrates state forward using discrete Forward Euler numerical integration."""
         # TODO: Milestone 2.3 — Forward Euler Integration & Physical Constraints
         # This moves the simulation forward in time step-by-step.
         # Advance the state numerically and apply realistic constraints like max speed.
-        pass
+        
 
     def update_simulation(self):
         """Timer callback coordinating physics update and telemetry broadcast."""

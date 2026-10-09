@@ -8,6 +8,7 @@ import rclpy
 from rclpy.node import Node
 from nav_msgs.msg import Odometry, Path
 from std_msgs.msg import Float32
+from geometry_msgs.msg import Point
 
 from bicycle_control.longitudinal_pid import PIDLongitudinalController
 from bicycle_control.velocity_profiler import VelocityProfiler
@@ -60,6 +61,10 @@ class ControllerNode(Node):
         # Control loop at 10 Hz
         self.timer = self.create_timer(0.1, self.control_loop)
         self.get_logger().info(f'Vehicle Controller Active in mode: {self.control_mode.upper()}')
+
+        # Adding this part to I can make the sphere target point
+        self.target_pub = self.create_publisher(Point, '/control/target_point',10)
+
 
     def state_callback(self, msg: Odometry):
         x = msg.pose.pose.position.x
@@ -138,6 +143,8 @@ class ControllerNode(Node):
             return
 
         x, y, yaw, v = self.current_state
+        steer_rad = 0.0
+        throttle_cmd = 0.0
 
         if self.control_mode == 'lateral_pid':
             # Mode A: Lateral PID Benchmark
@@ -192,6 +199,15 @@ class ControllerNode(Node):
         t_msg = Float32()
         t_msg.data = float(throttle_cmd)
         self.throttle_pub.publish(t_msg)
+    #this is just to setup the sphere target point
+        if self.path_points :
+            lookahead = self.pure_pursuit.compute_lookahead(v)
+            _, tgt_pt = self.pure_pursuit.find_target_waypoint(x, y, self.path_points, lookahead)
+            msg = Point()
+            msg.x = float(tgt_pt[0])
+            msg.y = float(tgt_pt[1])
+            msg.z = 0.0
+            self.target_pub.publish(msg)
 
     def get_waypoint_at_distance(self, start_idx, distance_ahead):
         """Walks forward along path by distance_ahead and interpolates reference pose."""
