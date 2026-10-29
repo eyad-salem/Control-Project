@@ -4,12 +4,12 @@
 - Number : 01140522270
 - Email : eyads0lem@gmail.com
 
---Brief Overview about this project--
-It's a ROS2 simulation of a small self-driving car that has to drive around a closed racetrack bounded by cones that it must avoid. The car doesn't recieve direct velocity inputs , but it moves based on different states along with some other inputs. The reason for this design , is that it give us a closer view of how cars/vehicles in general operate with all the disturbances/noises it faces.In this project, the main focus was on three primary controllers MPC , PID and Pure pursuit.It also includes a curvature-based velocity profiler , and a lap analyzer that measures the benchmarks/performance of each controller so we can compare them at the end and know the best one "in this scenario" as each scenario/case can have a different controller that coupes better.
+## Brief Overview about this project
+- It's a ROS2 simulation of a small self-driving car that has to drive around a closed racetrack bounded by cones that it must avoid. The car doesn't recieve direct velocity inputs , but it moves based on different states along with some other inputs. The reason for this design , is that it give us a closer view of how cars/vehicles in general operate with all the disturbances/noises it faces.In this project, the main focus was on three primary controllers MPC , PID and Pure pursuit.It also includes a curvature-based velocity profiler , and a lap analyzer that measures the benchmarks/performance of each controller so we can compare them at the end and know the best one "in this scenario" as each scenario/case can have a different controller that coupes better.
 
 
---System Architecture--
-This project includes three main packages:-
+## System Architecture
+- This project includes three main packages:-
     * bicycle_sim --> Includes the vehicle model in bicycle_model.py , and the kinematic_bicycle has the robot discription alon with the RVIZ configs and the main launch file.
 
     * bicycle_control --> The controller node which has the main nodes this projects provides 
@@ -138,7 +138,7 @@ sharply on high speed. The fourmuala  k basically indicates whether the path is 
 
 
 
---- Quick Brief about each topic MILESTONE 6 --
+## Quick Brief each of the listed Topics
 
 - 3D Simulation (Gazebo or MVsim) :- Starting off with Gazebo , it's a 3D simulator that creates like a virtual sandbox where a robot can move and behave according to physics.Which basically allows you to test your algorithms without needing real hardware ,which saves time , money and prevents damage. Gazebo runs as a client-server system. Server(gzserver) which is the brain, it runs the physics engine ,simulates sensors and calculates where everything is. Client(gzclient) the eyes, which is the graphical window you see on the screen. Server / Client are connects and ROS2 code aswell so they can all communicate. What about MVSIM , it's a lighter and a faster simulater that focuses on vehicles. Also , it uses a 2D physics engine , but adds realisteic vehicle dynamics into it. It works entirely through XML files , so you can change the environment/world without writing code.
 -Couple instructions to know how gazebo works:- 
@@ -158,7 +158,7 @@ sharply on high speed. The fourmuala  k basically indicates whether the path is 
 --More Details About the Nav2 MPPI Control--
     Usually in traditional optimal control , fidning the best control sequence requires solving a tough nonlinear partial differntial equation called the HJB equation back then. This was very complex and took too much effort (computation/time).Since we got MPPI now it uses an exponential transformation. This allows it to linearize the nonlinear HJB partial differntial equation , but ofcourse as a path integeral which means an expectation over forward-simulated paths.The MPPI isn't just like random sampling , but also it comes from an information-theoretic optimal control framework. It frames optimal control as a KL divergence minimization problem between uncontrolled and a controlled system. By doing this , it changed computing the optimal control input using heavy mathematical optimization solver into Monte Carlo estamtion of an expeceted value using importance sampling. Something very important is that the stochastic noise variance injected into the system must match the control weight. Meaning that , it directly shows how aggressive the alorithm weights low cost paths versus high cost path during the weighting average process.
 
-    -- BenchMarks & Comparison -- 
+## BenchMarks & Comparison
 
  ![alt text](table.png)
 
@@ -178,7 +178,7 @@ sharply on high speed. The fourmuala  k basically indicates whether the path is 
     you can use rqt_plot to check the errors relative to the time or even rqt_graph to checks the nodes , topics and which ones are the subscriber or publisher
 
 
-    --Showing Laps--
+  ## Laps
 
     MPC--> 
 
