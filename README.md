@@ -21,7 +21,13 @@ This project includes three main packages:-
 PID --> It's divided into three parts : P (proportional) which reacts to the current error if it's large then it takes a large correction and vice versa. I (Integeration) which keeps up with the past errors to avoid steady state which won't allow the control to reach the desired target. D (Derivative) this one checks the rate of change so if the controller is increasing it's speed rapidly to reach a target the D slows it down to prevent overshoot(is when you exceed the desired goal)
 
 
-Formula & some of it's variables --> ![alt text](image-1.png)  
+
+
+
+
+Formula & some of it's variables -->                                   ![alt text](image-1.png)  
+
+
 
 
 U(t) = is the output
@@ -32,14 +38,31 @@ Pure pursuit --> It's a geometric path-tracking algorithm as it's concept is try
 Using some way (using geomtry to calculate the curvature needed to smoothly arc the vehicle toward the target point) which is something that makes it highly stable at moderate speeds.
 
 
-Formulas --> ![alt text](image-2.png) this is to get the lookahead distance from the vehicle's current position.Then we got the path curvature equation which leads us to the target point ![alt text](image-3.png). The a 
+
+
+
+
+Formulas --> ![alt text](image-2.png)                this is to get the lookahead distance from the vehicle's current position.Then we got the path curvature equation which leads us to the target point ![alt text](image-3.png). The a 
+
+
+
 
 
 
 indicates the angle between the vehicl's current heading vector and the vectore pointing from the vehicle to the lookahead target.
 
 
-Most importantly, the steering angle for formula ![alt text](image-4.png).
+
+
+
+
+
+Most importantly, the steering angle for formula                                      ![alt text](image-4.png).
+
+
+
+
+
 
 
 
@@ -47,15 +70,46 @@ MPC --> It's a more advanced controller , optimization-based control strategy th
 
 
 
-Formulas --> ![alt text](image-5.png) so the future prediction depends on the current state and some other factors. Then we got the cost function known as (J) ![alt text](image-6.png), we usually square errors so we get 
 
 
-rid of very tiny errors that won't really bother in the overall performance. In addition to that , what makes MPC a great choice is that it also takes vehicle constraints inconsideration ![alt text](image-7.png) which means that the vehicle won't do an out of bound control.
+
+
+
+Formulas -->                              ![alt text](image-5.png)                               so the future prediction depends on the current state and some other factors. Then we got the cost function known as (J)                     ![alt text](image-6.png)                    , we usually square errors so we get 
+
+
+
+
+
+
+
+
+rid of very tiny errors that won't really bother in the overall performance. In addition to that , what makes MPC a great choice is that it also takes vehicle constraints inconsideration                              ![alt text](image-7.png)               which means that the vehicle won't do an out of bound control.
+
+
+
+
+
+
 
 Also we got "Velocity profiler" which is used to know the speed limit in corners from lateral acceleration. There is always limit in corners because many issue might happen if we don't get vehicle constraints or even turn 
 
 
-sharply on high speed. The fourmuala ![alt text](image-8.png) k basically indicates whether the path is smooth or not if it's zero then it's like a checkpoint that the car's speed can reach max speed since it's a straight path.
+
+
+
+
+
+
+
+sharply on high speed. The fourmuala                                       ![alt text](image-8.png)                                 k basically indicates whether the path is smooth or not if it's zero then it's like a checkpoint that the car's speed can reach max speed since it's a straight path.
+
+
+
+
+
+
+
 
 
 --- Quick Brief about each topic MILESTONE 6 --
