@@ -1,8 +1,8 @@
-Contact Information -:
+## Contact Information -:
 
-Name : Eyad Mohamed Fouad Abdelrahman Mohamed Salem
-Number : 01140522270
-Email : eyads0lem@gmail.com
+- Name : Eyad Mohamed Fouad Abdelrahman Mohamed Salem
+- Number : 01140522270
+- Email : eyads0lem@gmail.com
 
 --Brief Overview about this project--
 It's a ROS2 simulation of a small self-driving car that has to drive around a closed racetrack bounded by cones that it must avoid. The car doesn't recieve direct velocity inputs , but it moves based on different states along with some other inputs. The reason for this design , is that it give us a closer view of how cars/vehicles in general operate with all the disturbances/noises it faces.In this project, the main focus was on three primary controllers MPC , PID and Pure pursuit.It also includes a curvature-based velocity profiler , and a lap analyzer that measures the benchmarks/performance of each controller so we can compare them at the end and know the best one "in this scenario" as each scenario/case can have a different controller that coupes better.
