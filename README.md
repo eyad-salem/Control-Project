@@ -196,6 +196,6 @@ sharply on high speed. The fourmuala  k basically indicates whether the path is 
 
      manual_control-->
 
-   ![alt text](manual_control.png)
+   ![alt_text](manual_control.png)
 
 
