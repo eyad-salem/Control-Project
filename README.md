@@ -138,7 +138,7 @@ sharply on high speed. The fourmuala  k basically indicates whether the path is 
 
 
 
-## Quick Brief each of the listed Topics
+## Quick Brief on each of the listed Topics
 
 - 3D Simulation (Gazebo or MVsim) :- Starting off with Gazebo , it's a 3D simulator that creates like a virtual sandbox where a robot can move and behave according to physics.Which basically allows you to test your algorithms without needing real hardware ,which saves time , money and prevents damage. Gazebo runs as a client-server system. Server(gzserver) which is the brain, it runs the physics engine ,simulates sensors and calculates where everything is. Client(gzclient) the eyes, which is the graphical window you see on the screen. Server / Client are connects and ROS2 code aswell so they can all communicate. What about MVSIM , it's a lighter and a faster simulater that focuses on vehicles. Also , it uses a 2D physics engine , but adds realisteic vehicle dynamics into it. It works entirely through XML files , so you can change the environment/world without writing code.
 -Couple instructions to know how gazebo works:- 
